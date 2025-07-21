@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: gami-ai
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gami-ai
+    username: thangbui
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+jwt:
+  secret: pZGV5hKRLU4z8m2oBVY3Dzm2f0YSXb7qG6Wd8PfJzFMPTyxC4bT0fCxytgQWER9SeVMRyEVOnVkbSD0rtdEiPw==
+  expirationMs: 86400000
+
+jasypt:
+  encryptor:
+    password: gami_ai_secret
+    algorithm: PBEWithMD5AndDES
+
+execution:
+  server:
+    url: http://localhost:8001
+
+ai:
+  agent:
+    url: http://localhost:4000
+
+engagement:
+  max-actions: 5
