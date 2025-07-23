@@ -14,11 +14,9 @@ RUN ./mvnw dependency:go-offline
 # Copy the rest of the source code
 COPY src src
 
-# Build the application
-RUN ./mvnw package -DskipTests
-
-# Copy the built jar to the container
-COPY target/gami-ai-be-0.0.1-SNAPSHOT.jar app.jar
+# Build the application and rename the jar
+RUN ./mvnw package -DskipTests && \
+    cp target/gami-ai-be-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port (default for Spring Boot is 8080)
 EXPOSE 8080
