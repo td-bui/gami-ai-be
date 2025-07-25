@@ -47,7 +47,8 @@ public class LessonController {
             if (isOnlyQuizLesson){
                 response.setCompleted(true);
             }
-            lessonService.markLessonCompleted(userId, id, isOnlyQuizLesson);
+            int xp = lessonService.markLessonCompleted(userId, id, isOnlyQuizLesson);
+            response.setXpGained(xp);
         }
         response.setAllCorrect(allCorrect);
         response.setWrongQuizIds(wrongQuizIds);

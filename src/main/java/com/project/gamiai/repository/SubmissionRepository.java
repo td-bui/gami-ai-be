@@ -18,4 +18,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Integer>
     List<Submission> findByProblemIdOrderBySubmittedAtDesc(Integer problemId);
     
     boolean existsByUserIdAndProblemIdAndStatus(Integer userId, Integer problemId, String status);
+
+    long countByUserId(Integer userId);
+    long countByUserIdAndStatus(Integer userId, String status);
+    List<Submission> findByUserIdAndStatusOrderBySubmittedAtDesc(Integer userId, String status);
 }

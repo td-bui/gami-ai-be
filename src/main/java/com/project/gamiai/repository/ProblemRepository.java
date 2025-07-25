@@ -1,10 +1,15 @@
 package com.project.gamiai.repository;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.project.gamiai.domain.Problem;
 import com.project.gamiai.dto.response.ProblemSearchDto;
@@ -71,4 +76,20 @@ public interface ProblemRepository extends JpaRepository<Problem, Integer>, JpaS
         Integer userId,
         Pageable pageable
     );
+
+    @Query("SELECT p.difficulty, COUNT(p) FROM Problem p GROUP BY p.difficulty")
+    List<Object[]> countTotalByDifficulty();
+
+    default Map<String, Long> findTotalCountByDifficulty() {
+        return countTotalByDifficulty().stream()
+            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
+    }
+
+    @Query("SELECT p.difficulty, COUNT(p) FROM Problem p JOIN UserProgress up ON p.id = up.problemId WHERE up.userId = :userId AND up.solved = true GROUP BY p.difficulty")
+    List<Object[]> countSolvedByDifficulty(@Param("userId") Integer userId);
+
+    default Map<String, Long> findSolvedCountByDifficulty(Integer userId) {
+        return countSolvedByDifficulty(userId).stream()
+            .collect(Collectors.toMap(obj -> (String) obj[0], obj -> (Long) obj[1]));
+    }
 }

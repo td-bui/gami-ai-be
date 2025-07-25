@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.project.gamiai.domain.EngagementLog;
+import com.project.gamiai.domain.Lesson;
 import com.project.gamiai.domain.LessonProblem;
 import com.project.gamiai.domain.LessonProgress;
 import com.project.gamiai.domain.Problem;
@@ -33,16 +34,16 @@ import com.project.gamiai.dto.response.ProblemDetailDto;
 import com.project.gamiai.dto.response.ProblemSearchDto;
 import com.project.gamiai.dto.response.SubmissionResultDto;
 import com.project.gamiai.dto.response.TestCaseDto;
-import com.project.gamiai.mapper.ProblemMapper;
 import com.project.gamiai.repository.EngagementLogRepository;
 import com.project.gamiai.repository.LessonProblemRepository;
 import com.project.gamiai.repository.LessonProgressRepository;
+import com.project.gamiai.repository.LessonRepository;
 import com.project.gamiai.repository.ProblemRepository;
 import com.project.gamiai.repository.TestCaseRepository;
-import com.project.gamiai.repository.TopicRepository;
 import com.project.gamiai.repository.UserProgressRepository;
 import com.project.gamiai.service.ProblemService;
 import com.project.gamiai.service.SubmissionService;
+import com.project.gamiai.util.XpLevelUtil;
 
 @Service
 public class ProblemServiceImpl implements ProblemService {
@@ -66,12 +67,6 @@ public class ProblemServiceImpl implements ProblemService {
     private SubmissionService submissionService;
 
     @Autowired
-    private ProblemMapper problemMapper;
-
-    @Autowired
-    private TopicRepository topicRepository;
-
-    @Autowired
     private UserProgressRepository userProgressRepository;
 
     @Autowired
@@ -81,7 +76,13 @@ public class ProblemServiceImpl implements ProblemService {
     private LessonProgressRepository lessonProgressRepository;
 
     @Autowired
+    private LessonRepository lessonRepository; // Add this repository
+
+    @Autowired
     private Environment env;
+
+    @Autowired
+    private XpLevelUtil xpLevelUtil; // Inject the new util
 
 
     @Override
@@ -231,6 +232,8 @@ public class ProblemServiceImpl implements ProblemService {
         Submission submission = submissionService.updateSubmissionWithResult(jobId, body, authorizationHeader);
         updateProblemStatsAfterSubmission(submission, body);
 
+        int totalXpGained = 0; // Initialize XP counter
+
         // Calculate test case stats
         int total = 0, passed = 0;
         JsonNode failedTestCase = null;
@@ -245,13 +248,43 @@ public class ProblemServiceImpl implements ProblemService {
             }
         }
 
+        boolean allPassed = total > 0 && passed == total;
+
+        // --- Award XP for problem if all test cases passed ---
+        if (allPassed && submission != null && submission.getUserId() != null) {
+            Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
+            if (problem != null) {
+                UserProgress userProgress = userProgressRepository
+                    .findByUserIdAndProblemId(submission.getUserId(), submission.getProblemId())
+                    .orElseGet(() -> {
+                        UserProgress up = new UserProgress();
+                        up.setUserId(submission.getUserId());
+                        up.setProblemId(submission.getProblemId());
+                        up.setSolved(false);
+                        return up;
+                    });
+                
+                boolean wasAlreadySolved = userProgress.getSolved();
+
+                if (!wasAlreadySolved) {
+                    totalXpGained += xpLevelUtil.awardXpForProblem(submission.getUserId(), problem.getDifficulty());
+                    userProgress.setSolved(true);
+                    if (userProgress.getFirstSolved() == null) {
+                        userProgress.setFirstSolved(java.time.LocalDateTime.now());
+                    }
+                }
+                userProgress.setLastAttempted(java.time.LocalDateTime.now());
+                userProgressRepository.save(userProgress);
+            }
+        }
+
         // Only include failedTestCase if not all passed
-        if (passed == total) {
+        if (allPassed) {
             failedTestCase = null;
         }
 
-        // --- Update LessonProgress if all testcases passed and lessonId is not null ---
-        if (lessonId != null && total > 0 && passed == total && submission != null && submission.getUserId() != null) {
+        // --- Update LessonProgress and award XP if lesson is completed ---
+        if (lessonId != null && allPassed && submission != null && submission.getUserId() != null) {
             LessonProgress lessonProgress = lessonProgressRepository
                 .findByUserIdAndLessonId(submission.getUserId(), lessonId)
                 .orElseGet(() -> {
@@ -261,12 +294,21 @@ public class ProblemServiceImpl implements ProblemService {
                     lp.setCompleted(false);
                     return lp;
                 });
+            
+            boolean wasLessonAlreadyCompleted = lessonProgress.getCompleted();
+
             lessonProgress.setCompleted(true);
             lessonProgress.setCompletedAt(java.time.LocalDateTime.now());
             lessonProgressRepository.save(lessonProgress);
+
+            if (!wasLessonAlreadyCompleted) {
+                Lesson lesson = lessonRepository.findById(lessonId)
+                    .orElseThrow(() -> new RuntimeException("Lesson not found for XP calculation"));
+                totalXpGained += xpLevelUtil.awardXpForLesson(submission.getUserId(), lesson.getDifficulty());
+            }
         }
 
-        return new SubmissionResultDto(submission, total, passed, failedTestCase);
+        return new SubmissionResultDto(submission, total, passed, failedTestCase, totalXpGained);
     }
 
     /**

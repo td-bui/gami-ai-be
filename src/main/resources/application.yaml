@@ -2,9 +2,9 @@ spring:
   application:
     name: gami-ai
   datasource:
-    url: jdbc:postgresql://host:port/db
-    username: user
-    password: pass
+    url: jdbc:postgresql://tramway.proxy.rlwy.net:21803/railway
+    username: postgres
+    password: gMftyHRQixCGqJyCLdaTNZrQfeHDBZeT
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -13,7 +13,7 @@ spring:
     show-sql: true
 
 jwt:
-  secret: your_jwt_secret
+  secret: pZGV5hKRLU4z8m2oBVY3Dzm2f0YSXb7qG6Wd8PfJzFMPTyxC4bT0fCxytgQWER9SeVMRyEVOnVkbSD0rtdEiPw==
   expirationMs: 86400000
 
 jasypt:

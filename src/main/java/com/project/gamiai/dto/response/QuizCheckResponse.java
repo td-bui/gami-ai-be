@@ -9,4 +9,5 @@ public class QuizCheckResponse {
     private boolean allCorrect;
     private List<Integer> wrongQuizIds;
     private boolean isCompleted = false;
+    private int xpGained = 0;
 }

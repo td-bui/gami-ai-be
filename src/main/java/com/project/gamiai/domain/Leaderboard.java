@@ -1,6 +1,8 @@
 package com.project.gamiai.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,8 +14,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Leaderboard {
     @Id
-    private Integer user_id;
-    private Integer rank;
+    private Integer userId;
+    private String level;
     private Integer xp;
-    private Integer problemsSolved;
+    private Integer problemsSolved = 0;
+    private Integer lessonsCompleted = 0;
 }

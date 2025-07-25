@@ -8,12 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.project.gamiai.domain.Lesson;
 import com.project.gamiai.domain.LessonProgress;
 import com.project.gamiai.dto.response.LessonDetailDto;
 import com.project.gamiai.dto.response.LessonQuizSectionDto;
 import com.project.gamiai.repository.LessonCustomRepository;
 import com.project.gamiai.repository.LessonProgressRepository;
+import com.project.gamiai.repository.LessonRepository;
 import com.project.gamiai.service.LessonService;
+import com.project.gamiai.util.XpLevelUtil;
 
 @Service
 public class LessonServiceImpl implements LessonService {
@@ -23,6 +26,12 @@ public class LessonServiceImpl implements LessonService {
 
     @Autowired
     private LessonProgressRepository lessonProgressRepository;
+
+    @Autowired
+    private LessonRepository lessonRepository;
+
+    @Autowired
+    private XpLevelUtil xpLevelUtil;
 
     @Override
     public LessonDetailDto getLessonDetailWithExamplesAndQuizzes(Integer id) {
@@ -54,7 +63,8 @@ public class LessonServiceImpl implements LessonService {
     }
 
     @Override
-    public void markLessonCompleted(Integer userId, Integer lessonId, Boolean isOnlyQuiz) {
+    @Transactional
+    public int markLessonCompleted(Integer userId, Integer lessonId, Boolean isOnlyQuiz) {
         LessonProgress progress = lessonProgressRepository
                 .findByUserIdAndLessonId(userId, lessonId)
                 .orElseGet(() -> {
@@ -63,11 +73,22 @@ public class LessonServiceImpl implements LessonService {
                     lp.setLessonId(lessonId);
                     return lp;
                 });
+
+        boolean wasAlreadyCompleted = progress.getCompleted();
+
         progress.setQuizCompleted(true);
         if (isOnlyQuiz != null && isOnlyQuiz) {
             progress.setCompleted(true);
         }
         lessonProgressRepository.save(progress);
+        
+        if (progress.getCompleted() && !wasAlreadyCompleted) {
+            Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Lesson not found for XP calculation"));
+            return xpLevelUtil.awardXpForLesson(userId, lesson.getDifficulty());
+        }
+
+        return 0;
     }
 
     @Override

@@ -8,4 +8,5 @@ import com.project.gamiai.domain.UserProgress;
 
 public interface UserProgressRepository extends JpaRepository<UserProgress, Integer> {
     Optional<UserProgress> findByUserIdAndProblemId(Integer userId, Integer problemId);
+    Integer countByUserIdAndSolved(Integer userId, boolean solved);
 }

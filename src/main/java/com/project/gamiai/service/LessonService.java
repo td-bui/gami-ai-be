@@ -13,7 +13,7 @@ public interface LessonService {
 
     boolean isOnlyQuizLesson(Integer lessonId);
 
-    void markLessonCompleted(Integer userId, Integer lessonId, Boolean isOnlyQuizLesson);
+    int markLessonCompleted(Integer userId, Integer lessonId, Boolean isOnlyQuizLesson);
 
     LessonQuizSectionDto findQuizzesByLessonId(Integer lessonId, Integer userId);
     void resetQuizProgress(Integer userId, Integer lessonId);
