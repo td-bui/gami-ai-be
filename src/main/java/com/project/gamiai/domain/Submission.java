@@ -22,6 +22,7 @@ public class Submission {
     private Integer id;
     private Integer userId;
     private Integer problemId;
+    @Column(columnDefinition = "text")
     private String code;
     private String language = "Python";
     private String status;

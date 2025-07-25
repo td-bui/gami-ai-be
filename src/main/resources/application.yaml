@@ -23,11 +23,11 @@ jasypt:
 
 execution:
   server:
-    url: http://localhost:8001
+    url: https://gami-ai-exec-production.up.railway.app
 
 ai:
   agent:
-    url: http://localhost:4000
+    url: http://gami-ai-agent-production.up.railway.app
 
 engagement:
   max-actions: 5

@@ -1,5 +1,6 @@
 package com.project.gamiai.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,12 +91,12 @@ public class ProblemController {
         String action = problemService.processEngagementAndTuner(
             result, timeTaken, level, userId, problemId, false
         );
-        // String action = "show_motivation"; // Temporary action for testing
 
-        Map<String, Object> response = Map.of(
-            "result", result,
-            "action", action
-        );
+        // Use a HashMap which allows null values to prevent NullPointerException
+        Map<String, Object> response = new HashMap<>();
+        response.put("result", result);
+        response.put("action", action);
+
         return ResponseEntity.status(execResponse.getStatusCode().value()).body(response);
     }
 
@@ -114,20 +115,23 @@ public class ProblemController {
 
         JsonNode result = null;
         try {
-            result = new com.fasterxml.jackson.databind.ObjectMapper().convertValue(body, JsonNode.class);
+            // Safely convert DTO to JsonNode for the tuner service
+            if (body != null) {
+                result = new com.fasterxml.jackson.databind.ObjectMapper().convertValue(body, JsonNode.class);
+            }
         } catch (Exception e) {
-            // fallback: result remains null
+            // Fallback: result remains null, preventing a crash
         }
 
         String action = problemService.processEngagementAndTuner(
             result, timeTaken, level, userId, problemId, true
         );
-        // String action = "give_hint"; // Temporary action for testing
 
-        Map<String, Object> response = Map.of(
-            "result", body,
-            "action", action
-        );
+        // Use a HashMap which allows null values to prevent NullPointerException
+        Map<String, Object> response = new HashMap<>();
+        response.put("result", body);
+        response.put("action", action);
+        
         return ResponseEntity.ok(response);
     }
 
