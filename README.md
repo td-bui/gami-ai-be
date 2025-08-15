@@ -7,7 +7,6 @@ This is a Spring Boot backend for the Gami AI project.
 - User authentication (JWT)
 - Lesson, problem, and submission management
 - AI feedback integration
-- CORS configuration
 - PostgreSQL database support
 
 ## Project Structure
@@ -62,7 +61,3 @@ docker run -p 8080:8080 gami-ai-be
 ## API Endpoints
 
 See the controllers in `src/main/java/com/project/gamiai/controller/` for available endpoints.
-
-## License
-
-MIT (or specify your license)
